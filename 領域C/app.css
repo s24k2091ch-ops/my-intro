@@ -41,6 +41,59 @@ body {
     overflow: hidden;
 }
 
+/* 入力フィールド */
+.text-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 159, 28, 0.3);
+    color: var(--text-primary);
+    padding: 1.25rem;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-family: inherit;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.text-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(255, 159, 28, 0.3);
+}
+
+.text-input::placeholder {
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* 目的地テキストの表示部分 */
+.dest-display {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    border: 1px dashed rgba(255, 159, 28, 0.5);
+}
+
+.dest-icon {
+    font-size: 1.5rem;
+    margin-right: 0.75rem;
+}
+
+.dest-text {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(255, 159, 28, 0.3);
+}
+
+
 /* プログレスバー */
 .progress-bar {
     width: 100%;

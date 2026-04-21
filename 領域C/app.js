@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. 気分とアクティビティのデータ定義 (少し選択肢を増やして重複回避しやすく)
+    // 1. 気分とアクティビティのデータ定義
     const vibeOptions = [
         {
             id: '1', icon: '🏕️', name: "アウトドア vibe", desc: "外に出たい！身体を動かしたい！",
@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const views = {
+        destination: document.getElementById('view-destination'),
         vibe: document.getElementById('view-vibe'),
         suggestions: document.getElementById('view-suggestions'),
         result: document.getElementById('view-result')
@@ -34,6 +35,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const suggestionTitle = document.getElementById('suggestion-title');
     const vibeTitle = document.getElementById('vibe-title');
     const progressFill = document.getElementById('progress-fill');
+    
+    // 目的地入力と表示に関するDOM
+    const destInput = document.getElementById('dest-input');
+    const btnStart = document.getElementById('btn-start');
+    const finalDestContainer = document.getElementById('final-dest-container');
+    const finalDestText = document.getElementById('final-dest');
 
     // スケジュール状態管理
     const stepOrder = ['morning', 'noon', 'night'];
@@ -44,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         noon: null,
         night: null
     };
+    
+    // 入力された目的地
+    let currentDestination = "";
     
     // 使ったアクティビティを記録（重複防止用）
     let usedActivities = new Set();
@@ -112,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // すでに選んだものを除外する
         const available = activities.filter(a => !usedActivities.has(a));
         
-        // もし候補が足りなくなってしまったら、重複を許容する(フォールバック)
+        // もし候補が足りなくなってしまったら、重複を許容する
         const pool = available.length >= count ? available : activities;
         
         const shuffled = [...pool].sort(() => 0.5 - Math.random());
@@ -173,6 +183,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function showResult() {
         progressFill.style.width = "100%";
         
+        // 目的地の表示
+        if (currentDestination) {
+            finalDestText.textContent = `行き先: ${currentDestination}`;
+            finalDestContainer.style.display = 'flex';
+        } else {
+            // 空欄の場合は表示しない
+            finalDestContainer.style.display = 'none';
+        }
+        
         // 取得した予定をHTMLにセット
         document.getElementById('final-morning').textContent = schedule.morning;
         document.getElementById('final-noon').textContent = schedule.noon;
@@ -190,11 +209,36 @@ document.addEventListener('DOMContentLoaded', () => {
         usedActivities.clear();
         currentVibe = null;
         
+        // 入力フォームをリセット
+        destInput.value = "";
+        currentDestination = "";
+        
         updateVibeScreenData();
-        switchView('vibe');
+        switchView('destination');  // 目的地画面に戻る
     }
 
     // --- イベントリスナー ---
+    
+    // 【NEW】目的地を入力してスタート
+    btnStart.addEventListener('click', () => {
+        const inputStr = destInput.value.trim();
+        if (inputStr) {
+            currentDestination = inputStr;
+        } else {
+            currentDestination = "";
+        }
+        // 気分選択画面へ
+        updateVibeScreenData();
+        switchView('vibe');
+    });
+
+    // Enterキーでもスタートできるように
+    destInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            btnStart.click();
+        }
+    });
+    
     document.getElementById('btn-reroll').addEventListener('click', showSuggestions);
     
     document.getElementById('btn-back').addEventListener('click', () => {
@@ -206,5 +250,5 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-restart').addEventListener('click', resetApp);
     
     // アプリ起動時のセットアップ
-    updateVibeScreenData();
+    // (初期状態では目的地画面が表示される)
 });

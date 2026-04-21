@@ -12,8 +12,18 @@
 </head>
 <body>
     <main class="app-container">
+        <!-- 画面0: 目的地入力 -->
+        <div id="view-destination" class="view active">
+            <h1 class="title">🗺️ 今日はどこへ行く？</h1>
+            <p class="subtitle" style="font-size: 0.95rem; font-weight: normal; margin-bottom: 2rem;">
+                目的地を入力してね<br>（決まってなければ空欄でもOK！）
+            </p>
+            <input type="text" id="dest-input" class="text-input" placeholder="例: 横浜、渋谷、テーマパーク など">
+            <button id="btn-start" class="btn primary mt-4">ここでスケジュールを作る</button>
+        </div>
+
         <!-- 画面1: 気分選択 -->
-        <div id="view-vibe" class="view active">
+        <div id="view-vibe" class="view">
             <!-- 進行状況表示 -->
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
@@ -41,6 +51,12 @@
         <div id="view-result" class="view">
             <h1 class="title result-title">🎉 スケジュール完成！ 🎉</h1>
             <div class="schedule-card blur-bg">
+                <!-- 目的地表示領域 -->
+                <div id="final-dest-container" class="dest-display">
+                    <span class="dest-icon">🗺️</span>
+                    <span class="dest-text" id="final-dest"></span>
+                </div>
+
                 <ul class="timeline">
                     <li class="timeline-item">
                         <div class="timeline-icon morning-icon">🌅</div>
