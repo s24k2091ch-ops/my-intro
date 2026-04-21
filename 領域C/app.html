@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1-Day Vibe Schedule</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <main class="app-container">
+        <!-- 画面1: 気分選択 -->
+        <div id="view-vibe" class="view active">
+            <!-- 進行状況表示 -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <h1 class="title" id="vibe-title">✨ まずは「朝」何をする？✨</h1>
+            <div class="vibe-grid" id="vibe-buttons">
+                <!-- JSでボタンが生成されます -->
+            </div>
+        </div>
+
+        <!-- 画面2: 提案表示 -->
+        <div id="view-suggestions" class="view">
+            <h2 class="subtitle" id="suggestion-title"></h2>
+            <div class="suggestion-list" id="suggestion-list">
+                <!-- JSで提案ボタンが生成されます -->
+            </div>
+            <div class="actions">
+                <button id="btn-reroll" class="btn secondary">🔄 他の候補を見る</button>
+                <button id="btn-back" class="btn secondary">⬅️ 気分を選び直す</button>
+            </div>
+            <p class="hint">💡 この中にあれば選んでね！</p>
+        </div>
+
+        <!-- 画面3: 決定 -->
+        <div id="view-result" class="view">
+            <h1 class="title result-title">🎉 スケジュール完成！ 🎉</h1>
+            <div class="schedule-card blur-bg">
+                <ul class="timeline">
+                    <li class="timeline-item">
+                        <div class="timeline-icon morning-icon">🌅</div>
+                        <div class="timeline-content">
+                            <span class="time-label">朝 (Morning)</span>
+                            <span class="activity-text" id="final-morning"></span>
+                        </div>
+                    </li>
+                    <li class="timeline-item">
+                        <div class="timeline-icon noon-icon">☀️</div>
+                        <div class="timeline-content">
+                            <span class="time-label">昼 (Noon)</span>
+                            <span class="activity-text" id="final-noon"></span>
+                        </div>
+                    </li>
+                    <li class="timeline-item">
+                        <div class="timeline-icon night-icon">🌙</div>
+                        <div class="timeline-content">
+                            <span class="time-label">夜 (Night)</span>
+                            <span class="activity-text" id="final-night"></span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <p class="message">最高の1日になりますように。<br>いってらっしゃい！ ✨</p>
+            <button id="btn-restart" class="btn primary mt-4">別のスケジュールを作る</button>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
