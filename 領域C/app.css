@@ -1,12 +1,12 @@
 :root {
-    --bg-color: #1c1511;        /* やや柔らかいダーク背景 */
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --accent: #ff9f1c;          /* 明るく鮮やかなオレンジ */
-    --accent-hover: #ffb74d;    /* さらに明るいホバー用オレンジ */
-    --glass-bg: rgba(255, 255, 255, 0.06);
-    --glass-border: rgba(255, 255, 255, 0.15);
-    --card-hover: rgba(255, 255, 255, 0.12);
+    --bg-color: #f8fafc;        /* クリーンな明るい背景（白〜極薄いグレー） */
+    --text-primary: #1e293b;    /* 読みやすい濃いグレー（文字色） */
+    --text-secondary: #64748b;
+    --accent: #f97316;          /* アクセントのオレンジ（白背景に映えるやや濃いめ） */
+    --accent-hover: #ea580c;
+    --glass-bg: rgba(255, 255, 255, 0.85); /* 白ベースのグラスモーフィズム */
+    --glass-border: rgba(0, 0, 0, 0.08);   /* うすい枠線 */
+    --card-hover: rgba(255, 255, 255, 1);
 }
 
 * { box-sizing: border-box; }
@@ -22,9 +22,11 @@ body {
     align-items: center;
     overflow: hidden;
     padding: 1rem;
+    
+    /* 背景に薄いオレンジの光をほのかに配置 */
     background-image: 
-        radial-gradient(circle at 15% 50%, rgba(255, 159, 28, 0.2), transparent 35%),
-        radial-gradient(circle at 85% 30%, rgba(255, 209, 102, 0.15), transparent 35%);
+        radial-gradient(circle at 15% 50%, rgba(249, 115, 22, 0.06), transparent 35%),
+        radial-gradient(circle at 85% 30%, rgba(250, 204, 21, 0.06), transparent 35%);
 }
 
 .app-container {
@@ -37,15 +39,15 @@ body {
     border: 1px solid var(--glass-border);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05); /* ライトモード用の柔らかい影 */
     overflow: hidden;
 }
 
 /* 入力フィールド */
 .text-input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.05);
-    border: 2px solid rgba(255, 159, 28, 0.3);
+    background: #ffffff;
+    border: 2px solid rgba(0, 0, 0, 0.08);
     color: var(--text-primary);
     padding: 1.25rem;
     border-radius: 16px;
@@ -60,25 +62,24 @@ body {
 .text-input:focus {
     outline: none;
     border-color: var(--accent);
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 0 15px rgba(255, 159, 28, 0.3);
+    box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.15);
 }
 
 .text-input::placeholder {
-    color: var(--text-secondary);
+    color: #94a3b8;
     font-weight: 400;
 }
 
 /* 目的地テキストの表示部分 */
 .dest-display {
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(249, 115, 22, 0.05);
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 2rem;
-    border: 1px dashed rgba(255, 159, 28, 0.5);
+    border: 1px dashed rgba(249, 115, 22, 0.3);
 }
 
 .dest-icon {
@@ -90,15 +91,13 @@ body {
     font-size: 1.3rem;
     font-weight: 800;
     color: var(--accent);
-    text-shadow: 0 0 10px rgba(255, 159, 28, 0.3);
 }
-
 
 /* プログレスバー */
 .progress-bar {
     width: 100%;
     height: 6px;
-    background: rgba(255,255,255,0.1);
+    background: rgba(0, 0, 0, 0.05);
     border-radius: 3px;
     margin-bottom: 2rem;
     overflow: hidden;
@@ -106,7 +105,7 @@ body {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #ff9f1c, #ffd166);
+    background: linear-gradient(90deg, #f97316, #eab308);
     width: 0%;
     transition: width 0.4s ease;
 }
@@ -133,9 +132,7 @@ body {
     margin-top: 0;
     margin-bottom: 2rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #ffd166, #ff9f1c);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-primary);
 }
 
 .subtitle {
@@ -155,7 +152,7 @@ body {
 
 /* 気分選択ボタン */
 .vibe-btn {
-    background: var(--glass-bg);
+    background: #ffffff;
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
     padding: 1rem 1.25rem;
@@ -167,13 +164,14 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .vibe-btn:hover {
     background: var(--card-hover);
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-    border-color: rgba(255, 159, 28, 0.4);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+    border-color: rgba(249, 115, 22, 0.3);
 }
 
 .vibe-btn:active {
@@ -184,7 +182,6 @@ body {
     font-size: 1.75rem;
     margin-right: 1rem;
     display: inline-block;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .vibe-info { display: flex; flex-direction: column; }
@@ -200,7 +197,7 @@ body {
 }
 
 .suggestion-btn {
-    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.03));
+    background: #ffffff;
     border: 1px solid var(--glass-border);
     color: var(--text-primary);
     padding: 1.25rem;
@@ -212,26 +209,13 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-}
-
-.suggestion-btn::after {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%;
-    width: 50%; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
-    transform: skewX(-25deg);
-    animation: shine 4s infinite;
-}
-
-@keyframes shine {
-    0% { left: -100%; } 20% { left: 200%; } 100% { left: 200%; }
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .suggestion-btn:hover {
-    background: linear-gradient(145deg, rgba(255, 159, 28, 0.15), rgba(255, 209, 102, 0.08));
+    background: linear-gradient(145deg, #fff7ed, #ffffff);
     transform: scale(1.02) translateY(-2px);
-    box-shadow: 0 15px 25px -5px rgba(255, 159, 28, 0.3);
+    box-shadow: 0 10px 20px rgba(249, 115, 22, 0.1);
     border-color: var(--accent);
 }
 
@@ -258,40 +242,39 @@ body {
     border: none;
     transition: all 0.2s ease;
     font-family: inherit;
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
 .btn.primary {
-    background: linear-gradient(135deg, var(--accent), #ffbf00);
-    color: #1a120c;
-    font-weight: 800;
+    background: linear-gradient(135deg, #f97316, #f59e0b);
+    color: #ffffff;
 }
 
 .btn.primary:hover {
-    box-shadow: 0 0 20px rgba(255, 159, 28, 0.6);
+    box-shadow: 0 6px 15px rgba(249, 115, 22, 0.3);
     transform: translateY(-2px);
-    color: #000;
 }
 
 .btn.secondary {
     background: transparent;
-    border: 1px solid var(--glass-border);
-    color: #e2e8f0;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    color: var(--text-secondary);
 }
 
 .btn.secondary:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.03);
     color: var(--text-primary);
+    border-color: rgba(0, 0, 0, 0.3);
 }
 
 /* スケジュール結果表示（リッチ版） */
 .schedule-card {
-    background: linear-gradient(135deg, rgba(255, 159, 28, 0.15), rgba(255, 209, 102, 0.05));
-    border: 1px solid rgba(255, 159, 28, 0.3);
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
     padding: 2rem 1.5rem;
     border-radius: 20px;
     margin-bottom: 2rem;
-    box-shadow: 0 0 40px rgba(255, 159, 28, 0.15);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .timeline {
@@ -308,7 +291,7 @@ body {
     bottom: 25px;
     left: 21px;
     width: 2px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.08);
 }
 
 .timeline-item {
@@ -322,15 +305,15 @@ body {
 .timeline-item:last-child { margin-bottom: 0; }
 
 .timeline-icon {
-    width مکتیpx; height: 44px;
+    width: 44px; height: 44px;
     border-radius: 50%;
-    background: var(--bg-color);
-    border: 2px solid rgba(255, 159, 28, 0.9);
+    background: #ffffff;
+    border: 2px solid var(--accent);
     display: flex; justify-content: center; align-items: center;
     font-size: 1.25rem;
     margin-right: 1.25rem;
     flex-shrink: 0;
-    box-shadow: 0 0 15px rgba(255, 159, 28, 0.4);
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.15);
 }
 
 .timeline-content {
@@ -339,7 +322,7 @@ body {
 
 .time-label {
     font-size: 0.85rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     margin-bottom: 0.25rem;
     font-weight: 600;
 }
@@ -347,8 +330,7 @@ body {
 .activity-text {
     font-size: 1.35rem;
     font-weight: 800;
-    color: #fff;
-    text-shadow: 0 0 8px rgba(255, 159, 28, 0.3);
+    color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
@@ -356,8 +338,8 @@ body {
 .map-link-btn {
     display: inline-flex;
     align-items: center;
-    background: rgba(255, 159, 28, 0.1);
-    border: 1px solid rgba(255, 159, 28, 0.4);
+    background: rgba(249, 115, 22, 0.08);
+    border: 1px solid rgba(249, 115, 22, 0.3);
     color: var(--accent);
     text-decoration: none;
     padding: 0.4rem 0.8rem;
@@ -369,9 +351,9 @@ body {
 }
 
 .map-link-btn:hover {
-    background: rgba(255, 159, 28, 0.2);
+    background: rgba(249, 115, 22, 0.15);
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(255, 159, 28, 0.2);
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.1);
 }
 
 .message {
