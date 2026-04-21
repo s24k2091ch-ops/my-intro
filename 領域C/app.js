@@ -188,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
             finalDestText.textContent = `行き先: ${currentDestination}`;
             finalDestContainer.style.display = 'flex';
         } else {
-            // 空欄の場合は表示しない
             finalDestContainer.style.display = 'none';
         }
         
@@ -196,6 +195,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('final-morning').textContent = schedule.morning;
         document.getElementById('final-noon').textContent = schedule.noon;
         document.getElementById('final-night').textContent = schedule.night;
+
+        // 【NEW】Google Maps 検索リンクの自動生成
+        const baseMapUrl = "https://www.google.com/maps/search/?api=1&query=";
+        const queryPrefix = currentDestination ? currentDestination + " " : "";
+
+        // おすすめというキーワードを加えて検索
+        document.getElementById('link-morning').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.morning + " おすすめ");
+        document.getElementById('link-noon').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.noon + " おすすめ");
+        document.getElementById('link-night').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.night + " おすすめ");
         
         switchView('result');
     }
@@ -214,12 +222,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentDestination = "";
         
         updateVibeScreenData();
-        switchView('destination');  // 目的地画面に戻る
+        switchView('destination');
     }
 
     // --- イベントリスナー ---
     
-    // 【NEW】目的地を入力してスタート
+    // 目的地を入力してスタート
     btnStart.addEventListener('click', () => {
         const inputStr = destInput.value.trim();
         if (inputStr) {
@@ -227,12 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentDestination = "";
         }
-        // 気分選択画面へ
         updateVibeScreenData();
         switchView('vibe');
     });
 
-    // Enterキーでもスタートできるように
     destInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             btnStart.click();
@@ -242,13 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-reroll').addEventListener('click', showSuggestions);
     
     document.getElementById('btn-back').addEventListener('click', () => {
-        // 気分を選び直す (ステップは維持)
         currentVibe = null;
         switchView('vibe');
     });
     
     document.getElementById('btn-restart').addEventListener('click', resetApp);
-    
-    // アプリ起動時のセットアップ
-    // (初期状態では目的地画面が表示される)
 });
