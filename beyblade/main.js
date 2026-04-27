@@ -23,10 +23,10 @@ const BEY_RADIUS = 20;
 // burstResist: how many hits it can take before bursting
 // color: visual representation
 const BEY_TYPES = {
-    attack:   { weight: 1.0, speed: 8.0, stamina: 2400, burstResist: 12, color: '#ff3333' },
+    attack:   { weight: 1.0, speed: 6.5, stamina: 3200, burstResist: 12, color: '#ff3333' },
     defense:  { weight: 1.8, speed: 2.0, stamina: 3600, burstResist: 30, color: '#33cc33' },
-    stamina:  { weight: 0.8, speed: 2.0, stamina: 6000, burstResist: 10,  color: '#ffff33' },
-    balance:  { weight: 1.2, speed: 5.0, stamina: 3000, burstResist: 15, color: '#3388ff' }
+    stamina:  { weight: 0.8, speed: 2.0, stamina: 6000, burstResist: 14, color: '#ffff33' },
+    balance:  { weight: 1.4, speed: 5.5, stamina: 3000, burstResist: 15, color: '#3388ff' }
 };
 
 // DOM Elements
@@ -40,6 +40,10 @@ const scenes = {
 const scoreboard = document.getElementById('scoreboard');
 const playerPointsEl = document.getElementById('player-points');
 const cpuPointsEl = document.getElementById('cpu-points');
+const playerBurstFill = document.getElementById('player-burst-fill');
+const cpuBurstFill = document.getElementById('cpu-burst-fill');
+const countdownText = document.getElementById('countdown-text');
+const shootUI = document.getElementById('shoot-ui');
 const powerBar = document.getElementById('power-bar');
 const btnStartShoot = document.getElementById('btn-start-shoot');
 const btnShoot = document.getElementById('btn-shoot');
@@ -62,6 +66,7 @@ let playerBey = null;
 let cpuBey = null;
 let animationId = null;
 let isRoundEnding = false;
+let shakeAmount = 0; // 画面の揺れ量
 
 // --- Scene Management ---
 function switchScene(sceneName) {
@@ -147,8 +152,44 @@ function startShootPhase() {
     gaugeDir = 1;
     powerBar.style.height = '0%';
     
+    // Reset UI states
+    shootUI.classList.add('hidden');
+    countdownText.textContent = '';
+    countdownText.classList.remove('pop');
+    
+    const countSequence = ['3', '2', '1', 'GO!'];
+    let currentIdx = 0;
+    
+    function runNextCount() {
+        if (currentIdx < countSequence.length) {
+            const text = countSequence[currentIdx];
+            countdownText.textContent = text;
+            countdownText.setAttribute('data-text', text);
+            countdownText.style.opacity = '1';
+            
+            // Pop animation
+            countdownText.classList.remove('pop');
+            void countdownText.offsetWidth; // Trigger reflow
+            countdownText.classList.add('pop');
+            
+            if (text === 'GO!') {
+                // Show gauge and start moving
+                shootUI.classList.remove('hidden');
+                startGaugeInterval();
+            } else {
+                currentIdx++;
+                setTimeout(runNextCount, 1000);
+            }
+        }
+    }
+    
+    setTimeout(runNextCount, 500);
+}
+
+function startGaugeInterval() {
+    if (gaugeInterval) clearInterval(gaugeInterval);
     gaugeInterval = setInterval(() => {
-        gaugeValue += 2 * gaugeDir;
+        gaugeValue += 3 * gaugeDir; // Slightly faster gauge
         if (gaugeValue >= 100) {
             gaugeValue = 100;
             gaugeDir = -1;
@@ -164,15 +205,23 @@ btnShoot.addEventListener('click', () => {
     if (currentScene !== 'shoot') return;
     clearInterval(gaugeInterval);
     
-    // Calculate player power based on how close to 90% they stopped it
-    // 90% is ideal (MAX)
+    // Display "SHOOT!" text
+    countdownText.textContent = 'SHOOT!';
+    countdownText.setAttribute('data-text', 'SHOOT!');
+    countdownText.classList.remove('pop');
+    void countdownText.offsetWidth;
+    countdownText.classList.add('pop');
+    
+    // Calculate player power
     let accuracy = Math.abs(gaugeValue - 90);
-    playerPower = Math.max(0.3, 1.2 - (accuracy / 100)); // 0.3 to ~1.2 multiplier
+    playerPower = Math.max(0.3, 1.2 - (accuracy / 100));
 
-    // CPU power is random between 0.7 and 1.1
     cpuPower = 0.7 + Math.random() * 0.4;
 
-    initBattle();
+    // Small delay for the "SHOOT!" impact
+    setTimeout(() => {
+        initBattle();
+    }, 600);
 });
 
 // --- Battle Phase ---
@@ -186,6 +235,7 @@ class Beyblade {
         this.stamina = stats.stamina * powerMultiplier;
         this.maxStamina = this.stamina;
         this.burstResist = stats.burstResist;
+        this.maxBurstResist = this.burstResist;
         this.color = stats.color;
         this.radius = BEY_RADIUS;
 
@@ -193,6 +243,7 @@ class Beyblade {
         this.isSpecialActive = false;
         this.hasUsedDefense = false;
         this.isDefenseActive = false;
+        this.isDashing = false; // 技発動中フラグ
         
         this.originalType = typeName;
         this.balanceMode = 'stamina'; // バランスタイプ用（'stamina' or 'attack'）
@@ -233,12 +284,12 @@ class Beyblade {
             return; // バースト後は通常の物理演算を行わない
         }
 
+        const dx = CENTER_X - this.x;
+        const dy = CENTER_Y - this.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
         this.x += this.vx;
         this.y += this.vy;
-
-        let dx = CENTER_X - this.x;
-        let dy = CENTER_Y - this.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
 
         if (dist > STADIUM_RADIUS) {
             this.isOver = true;
@@ -271,42 +322,41 @@ class Beyblade {
             activeType = this.balanceMode; // 'stamina' または 'attack'
         }
 
+        // --- Global Slope Gravity (スタジアムの傾斜による中心への引き込み) ---
+        if (dist > 0 && !this.isOver) {
+            let gravity = 0.01 + (dist / STADIUM_RADIUS) * 0.02; // 緩やかに調整 (0.03+0.05 -> 0.01+0.02)
+            this.vx += (dx / dist) * gravity;
+            this.vy += (dy / dist) * gravity;
+        }
+
         // --- Type specific movement logic ---
         if (activeType === 'attack') {
-            // アタック：花形軌道（壁にぶつかる前に強く中央へターンする）
+            // アタック：花形軌道
             if (dist > 0) {
                 this.vx += (-dy / dist) * 0.08; // Tangential force
                 this.vy += (dx / dist) * 0.08;
                 
-                let pull = 0.02;
-                if (dist > 150) {
-                    pull += (dist - 150) * 0.008; // 外側にいくほど急激に中心へ向かう
+                // アタックタイプ特有の追加ターン（外側でのみ発動）
+                if (dist > 200) {
+                    let pull = (dist - 200) * 0.005; // 範囲を広げ、力を弱める (180/0.01 -> 200/0.005)
+                    this.vx += (dx / dist) * pull;
+                    this.vy += (dy / dist) * pull;
                 }
-                this.vx += (dx / dist) * pull;
-                this.vy += (dy / dist) * pull;
             }
             if (speedMag > 0) {
-                this.vx *= 0.995;
-                this.vy *= 0.995;
+                this.vx *= 0.992; // 摩擦をわずかに強化 (0.995 -> 0.992)
+                this.vy *= 0.992;
             }
         } 
         else if (activeType === 'stamina') {
-            // スタミナ：常に中央に陣取る（純粋なスタミナの動き）
-            if (dist > 0) {
-                this.vx += (dx / dist) * 0.1;
-                this.vy += (dy / dist) * 0.1;
-            }
+            // スタミナ：中央を維持
             if (speedMag > 0) {
-                this.vx *= 0.95;
-                this.vy *= 0.95;
+                this.vx *= 0.96;
+                this.vy *= 0.96;
             }
         }
         else if (activeType === 'defense') {
             // ディフェンス：中央に陣取る
-            if (dist > 0) {
-                this.vx += (dx / dist) * 0.08;
-                this.vy += (dy / dist) * 0.08;
-            }
             if (speedMag > 0) {
                 this.vx *= 0.97;
                 this.vy *= 0.97;
@@ -559,9 +609,11 @@ function triggerCpuQuickTurn() {
         let dist = Math.sqrt(dx*dx + dy*dy);
         if (dist > 0) {
             let currentSpeed = Math.sqrt(cpuBey.vx * cpuBey.vx + cpuBey.vy * cpuBey.vy);
-            let dashSpeed = Math.max(15, currentSpeed * 1.5);
+            let dashSpeed = Math.max(16, currentSpeed * 1.6); // 強化幅を抑制 (20 -> 16, 1.8 -> 1.6)
             cpuBey.vx = (dx / dist) * dashSpeed;
             cpuBey.vy = (dy / dist) * dashSpeed;
+            cpuBey.isDashing = true;
+            setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
         }
         for(let i=0; i<5; i++) drawImpactSpark(cpuBey.x + (Math.random()-0.5)*30, cpuBey.y + (Math.random()-0.5)*30);
         return;
@@ -581,8 +633,10 @@ function triggerCpuQuickTurn() {
     let randomOffset = (Math.random() - 0.5) * (Math.PI / 3);
     let newAngle = angleToCenter + randomOffset;
     
-    cpuBey.vx = Math.cos(newAngle) * (speed * 1.2 + 2.0); // 最低限のスピードを保証しつつ加速
-    cpuBey.vy = Math.sin(newAngle) * (speed * 1.2 + 2.0);
+    cpuBey.vx = Math.cos(newAngle) * (speed * 1.5 + 4.0); // 強化 (1.2 -> 1.5, 2.0 -> 4.0)
+    cpuBey.vy = Math.sin(newAngle) * (speed * 1.5 + 4.0);
+    cpuBey.isDashing = true;
+    setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
     
     drawImpactSpark(cpuBey.x, cpuBey.y);
 }
@@ -633,10 +687,12 @@ function triggerCpuTargetDash() {
     
     if (dist > 0) {
         let currentSpeed = Math.sqrt(cpuBey.vx * cpuBey.vx + cpuBey.vy * cpuBey.vy);
-        let dashSpeed = Math.max(15, currentSpeed * 1.5);
+        let dashSpeed = Math.max(16, currentSpeed * 1.6);
         
         cpuBey.vx = (dx / dist) * dashSpeed;
         cpuBey.vy = (dy / dist) * dashSpeed;
+        cpuBey.isDashing = true;
+        setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
     }
     
     // 突撃エフェクト
@@ -654,8 +710,8 @@ function triggerCpuSpecial() {
     let dy = playerBey.y - cpuBey.y;
     let dist = Math.sqrt(dx*dx + dy*dy);
     if(dist > 0) {
-        cpuBey.vx = (dx / dist) * 12;
-        cpuBey.vy = (dy / dist) * 12;
+        cpuBey.vx = (dx / dist) * 18; // 暴走抑制 (22 -> 18)
+        cpuBey.vy = (dy / dist) * 18;
     }
     
     setTimeout(() => {
@@ -676,8 +732,8 @@ btnSpecialMove.addEventListener('click', () => {
     let dy = cpuBey.y - playerBey.y;
     let dist = Math.sqrt(dx*dx + dy*dy);
     if(dist > 0) {
-        playerBey.vx = (dx / dist) * 12; // バランスの良いスピードに調整（元30）
-        playerBey.vy = (dy / dist) * 12;
+        playerBey.vx = (dx / dist) * 18; // 暴走抑制 (22 -> 18)
+        playerBey.vy = (dy / dist) * 18;
     }
     
     setTimeout(() => {
@@ -743,9 +799,11 @@ btnMove.addEventListener('click', () => {
         let dist = Math.sqrt(dx*dx + dy*dy);
         if (dist > 0) {
             let currentSpeed = Math.sqrt(playerBey.vx * playerBey.vx + playerBey.vy * playerBey.vy);
-            let dashSpeed = Math.max(15, currentSpeed * 1.5);
+            let dashSpeed = Math.max(16, currentSpeed * 1.6);
             playerBey.vx = (dx / dist) * dashSpeed;
             playerBey.vy = (dy / dist) * dashSpeed;
+            playerBey.isDashing = true;
+            setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
         }
         for(let i=0; i<5; i++) drawImpactSpark(playerBey.x + (Math.random()-0.5)*30, playerBey.y + (Math.random()-0.5)*30);
         btnMove.textContent = "TARGET DASH!";
@@ -767,8 +825,10 @@ btnMove.addEventListener('click', () => {
         let randomOffset = (Math.random() - 0.5) * (Math.PI / 3);
         let newAngle = angleToCenter + randomOffset;
         
-        playerBey.vx = Math.cos(newAngle) * (speed * 1.2 + 2.0);
-        playerBey.vy = Math.sin(newAngle) * (speed * 1.2 + 2.0);
+        playerBey.vx = Math.cos(newAngle) * (speed * 1.5 + 4.0);
+        playerBey.vy = Math.sin(newAngle) * (speed * 1.5 + 4.0);
+        playerBey.isDashing = true;
+        setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
         
         btnMove.textContent = "QUICK TURN!";
         drawImpactSpark(playerBey.x, playerBey.y);
@@ -798,10 +858,12 @@ btnFigure8.addEventListener('click', () => {
     
     if (dist > 0) {
         let currentSpeed = Math.sqrt(playerBey.vx * playerBey.vx + playerBey.vy * playerBey.vy);
-        let dashSpeed = Math.max(15, currentSpeed * 1.5); // 最低でも15の強烈なスピードで突撃
+        let dashSpeed = Math.max(20, currentSpeed * 1.8);
         
         playerBey.vx = (dx / dist) * dashSpeed;
         playerBey.vy = (dy / dist) * dashSpeed;
+        playerBey.isDashing = true;
+        setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
     }
     
     // 突撃エフェクト
@@ -833,8 +895,13 @@ function checkCollision() {
         cpuBey.y += ny * overlap / 2;
 
         // Elastic collision
-        let pWeight = playerBey.isDefenseActive ? playerBey.weight * 5 : playerBey.weight;
-        let cWeight = cpuBey.isDefenseActive ? cpuBey.weight * 5 : cpuBey.weight;
+        let pWeight = playerBey.weight;
+        if (playerBey.isDefenseActive) pWeight *= 5;
+        if (playerBey.isSpecialActive) pWeight *= 2; // 必殺技中は重くなる
+        
+        let cWeight = cpuBey.weight;
+        if (cpuBey.isDefenseActive) cWeight *= 5;
+        if (cpuBey.isSpecialActive) cWeight *= 2;
 
         let kx = (playerBey.vx - cpuBey.vx);
         let ky = (playerBey.vy - cpuBey.vy);
@@ -848,21 +915,37 @@ function checkCollision() {
         // Add extra bounce based on speed
         let impact = Math.abs(p);
         
-        // Reduce stamina and burst resistance
-        if (!playerBey.isDefenseActive) playerBey.stamina -= impact * 20;
-        if (!cpuBey.isDefenseActive) cpuBey.stamina -= impact * 20;
+        // Damage Multipliers
+        let pDamageMult = playerBey.isSpecialActive ? 2.5 : (playerBey.isDashing ? 1.6 : 1.0);
+        let cDamageMult = cpuBey.isSpecialActive ? 2.5 : (cpuBey.isDashing ? 1.6 : 1.0);
         
-        if (impact > 2) {
-            if (!playerBey.isDefenseActive) playerBey.burstResist -= 1;
-            if (!cpuBey.isDefenseActive) cpuBey.burstResist -= 1;
-            drawImpactSpark(playerBey.x + nx * playerBey.radius, playerBey.y + ny * playerBey.radius);
+        // Reduce stamina and burst resistance
+        if (!playerBey.isDefenseActive) playerBey.stamina -= impact * 20 * cDamageMult;
+        if (!cpuBey.isDefenseActive) cpuBey.stamina -= impact * 20 * pDamageMult;
+        
+        if (impact > 1.5) {
+            if (!playerBey.isDefenseActive) playerBey.burstResist -= (1 * cDamageMult);
+            if (!cpuBey.isDefenseActive) cpuBey.burstResist -= (1 * pDamageMult);
+            
+            // 衝撃に応じて画面を揺らす
+            shakeAmount = Math.min(20, impact * 2);
+            drawImpactSpark(playerBey.x + nx * playerBey.radius, playerBey.y + ny * playerBey.radius, impact * 0.5);
         }
     }
 }
 
 let sparks = [];
-function drawImpactSpark(x, y) {
-    sparks.push({x, y, life: 10});
+function drawImpactSpark(x, y, power = 1) {
+    for (let i = 0; i < 5 * power; i++) {
+        sparks.push({
+            x: x, 
+            y: y, 
+            vx: (Math.random() - 0.5) * 10 * power,
+            vy: (Math.random() - 0.5) * 10 * power,
+            life: 15 + Math.random() * 10,
+            size: 2 + Math.random() * 3
+        });
+    }
 }
 
 function handleWallCollision(bey) {
@@ -875,9 +958,9 @@ function handleWallCollision(bey) {
         let angle = Math.atan2(dy, dx);
         if (angle < 0) angle += 2 * Math.PI;
         
-        // 3 sections. Each has 80 deg wall, 40 deg pocket
+        // 3 sections. Each has 100 deg wall, 20 deg pocket (Total 120 deg)
         let segmentAngle = angle % (2 * Math.PI / 3);
-        let isWall = segmentAngle < (4 * Math.PI / 9);
+        let isWall = segmentAngle < (5 * Math.PI / 9); // 4 -> 5 に拡張 (100度)
         
         if (isWall) {
             // Push back inside
@@ -921,26 +1004,55 @@ function checkBounds(bey) {
 function battleLoop() {
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     
+    ctx.save();
+    // 画面の揺れを適用
+    if (shakeAmount > 0) {
+        let sx = (Math.random() - 0.5) * shakeAmount;
+        let sy = (Math.random() - 0.5) * shakeAmount;
+        ctx.translate(sx, sy);
+        shakeAmount *= 0.9; // 減衰
+        if (shakeAmount < 0.1) shakeAmount = 0;
+    }
+
+    // Draw stadium surface (Flat)
+    ctx.beginPath();
+    ctx.arc(CENTER_X, CENTER_Y, STADIUM_RADIUS, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fill();
+    
     // Draw stadium ring (Base/Pockets)
     ctx.beginPath();
     ctx.arc(CENTER_X, CENTER_Y, STADIUM_RADIUS, 0, Math.PI * 2);
-    ctx.strokeStyle = '#222';
+    ctx.strokeStyle = '#333';
     ctx.lineWidth = 5;
     ctx.stroke();
 
-    // Draw walls (Neon color)
+    // Draw walls (Neon color with glow)
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = '#00ffcc';
     ctx.strokeStyle = '#00ffcc';
-    ctx.lineWidth = 10;
+    ctx.lineWidth = 8;
     for (let i = 0; i < 3; i++) {
         let startAngle = i * (2 * Math.PI / 3);
-        let endAngle = startAngle + (4 * Math.PI / 9);
+        let endAngle = startAngle + (5 * Math.PI / 9); // 壁の描画範囲を拡張
         ctx.beginPath();
         ctx.arc(CENTER_X, CENTER_Y, STADIUM_RADIUS, startAngle, endAngle);
         ctx.stroke();
     }
+    ctx.shadowBlur = 0; // Reset shadow
 
     playerBey.update();
     cpuBey.update();
+
+    // Update Burst Gauges
+    const pBurstPct = Math.max(0, (playerBey.burstResist / playerBey.maxBurstResist) * 100);
+    const cBurstPct = Math.max(0, (cpuBey.burstResist / cpuBey.maxBurstResist) * 100);
+    
+    playerBurstFill.style.width = `${pBurstPct}%`;
+    cpuBurstFill.style.width = `${cBurstPct}%`;
+    
+    playerBurstFill.classList.toggle('danger', pBurstPct <= 30);
+    cpuBurstFill.classList.toggle('danger', cBurstPct <= 30);
 
     if (playerBey.stamina > 0) handleWallCollision(playerBey);
     if (cpuBey.stamina > 0) handleWallCollision(cpuBey);
@@ -955,13 +1067,20 @@ function battleLoop() {
     // Draw sparks
     for (let i = sparks.length - 1; i >= 0; i--) {
         let s = sparks[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.vx *= 0.95;
+        s.vy *= 0.95;
+        
         ctx.beginPath();
-        ctx.arc(s.x, s.y, s.life, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(255, 200, 0, ${s.life/10})`;
+        ctx.arc(s.x, s.y, s.size * (s.life / 25), 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255, 255, 0, ${s.life/25})`;
         ctx.fill();
         s.life -= 1;
         if(s.life <= 0) sparks.splice(i, 1);
     }
+
+    ctx.restore(); // 画面の揺れをリセット
 
     // Check Win Conditions
     if (!isRoundEnding) {

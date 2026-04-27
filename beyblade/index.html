@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BEYBLADE Mon</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,16 +11,26 @@
 </head>
 <body>
     <div id="game-container">
+        <!-- Background Effects -->
+        <div class="background-grid"></div>
+        <div class="scanlines"></div>
+
         <!-- 共通スコアボード (バトル中のみ表示) -->
         <div id="scoreboard" class="hidden">
             <div class="player-score">
-                <span class="name">YOU</span>
+                <div class="info">
+                    <span class="name">YOU</span>
+                    <div class="burst-meter"><div id="player-burst-fill" class="fill"></div></div>
+                </div>
                 <span class="score" id="player-points">0</span>
             </div>
             <div class="target-score">FIRST TO 3</div>
             <div class="cpu-score">
                 <span class="score" id="cpu-points">0</span>
-                <span class="name">CPU</span>
+                <div class="info">
+                    <span class="name">CPU</span>
+                    <div class="burst-meter"><div id="cpu-burst-fill" class="fill"></div></div>
+                </div>
             </div>
         </div>
 
@@ -69,12 +79,15 @@
 
         <!-- シュート画面 -->
         <div id="scene-shoot" class="scene hidden">
-            <h2>READY... SET!</h2>
-            <div class="gauge-container">
-                <div id="power-bar" class="power-bar"></div>
-                <div class="gauge-marker ideal">MAX</div>
+            <div id="countdown-text" class="glitch" data-text=""></div>
+            
+            <div id="shoot-ui" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="gauge-container">
+                    <div id="power-bar" class="power-bar"></div>
+                    <div class="gauge-marker ideal">MAX</div>
+                </div>
+                <button id="btn-shoot" class="action-btn">SHOOT!</button>
             </div>
-            <button id="btn-shoot" class="action-btn">SHOOT!</button>
         </div>
 
         <!-- バトル画面 (Canvas) -->
