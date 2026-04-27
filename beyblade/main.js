@@ -142,9 +142,10 @@ btnStartShoot.addEventListener('click', () => {
 });
 
 // --- Shoot Phase ---
-let gaugeDir = 1;
 let gaugeValue = 0;
-let gaugeInterval = null;
+let gaugeDir = 1;
+let gaugeAnimationId = null; // setIntervalからrequestAnimationFrameに変更
+let lastGaugeTime = 0;
 
 function startShootPhase() {
     switchScene('shoot');
@@ -175,7 +176,7 @@ function startShootPhase() {
             if (text === 'GO!') {
                 // Show gauge and start moving
                 shootUI.classList.remove('hidden');
-                startGaugeInterval();
+                startGaugeAnimation();
             } else {
                 currentIdx++;
                 setTimeout(runNextCount, 1000);
@@ -186,10 +187,20 @@ function startShootPhase() {
     setTimeout(runNextCount, 500);
 }
 
-function startGaugeInterval() {
-    if (gaugeInterval) clearInterval(gaugeInterval);
-    gaugeInterval = setInterval(() => {
-        gaugeValue += 3 * gaugeDir; // Slightly faster gauge
+function startGaugeAnimation() {
+    if (gaugeAnimationId) cancelAnimationFrame(gaugeAnimationId);
+    lastGaugeTime = performance.now();
+    
+    function updateGauge(timestamp) {
+        if (currentScene !== 'shoot') return;
+        
+        const dt = timestamp - lastGaugeTime;
+        lastGaugeTime = timestamp;
+        
+        // 1フレームあたりの移動量を時間ベースで計算 (16msで約3%移動)
+        const delta = (dt / 16) * 3;
+        
+        gaugeValue += delta * gaugeDir;
         if (gaugeValue >= 100) {
             gaugeValue = 100;
             gaugeDir = -1;
@@ -197,13 +208,17 @@ function startGaugeInterval() {
             gaugeValue = 0;
             gaugeDir = 1;
         }
+        
         powerBar.style.height = `${gaugeValue}%`;
-    }, 16);
+        gaugeAnimationId = requestAnimationFrame(updateGauge);
+    }
+    
+    gaugeAnimationId = requestAnimationFrame(updateGauge);
 }
 
 btnShoot.addEventListener('click', () => {
     if (currentScene !== 'shoot') return;
-    clearInterval(gaugeInterval);
+    if (gaugeAnimationId) cancelAnimationFrame(gaugeAnimationId);
     
     // Display "SHOOT!" text
     countdownText.textContent = 'SHOOT!';
