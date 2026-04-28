@@ -70,6 +70,10 @@ let animationId = null;
 let isRoundEnding = false;
 let shakeAmount = 0; // 画面の揺れ量
 
+// Preload icon for Beyblades
+const specialIcon = new Image();
+specialIcon.src = 'special-icon.png';
+
 // --- Scene Management ---
 function switchScene(sceneName) {
     Object.values(scenes).forEach(scene => scene.classList.add('hidden'));
@@ -508,12 +512,22 @@ class Beyblade {
         ctx.fill();
 
         ctx.beginPath();
-        ctx.moveTo(0, -this.radius);
-        ctx.lineTo(0, this.radius);
         ctx.moveTo(-this.radius, 0);
         ctx.lineTo(this.radius, 0);
         ctx.strokeStyle = '#555';
         ctx.stroke();
+
+        // --- Draw Icon on Beyblade surface ---
+        if (specialIcon.complete) {
+            ctx.save();
+            // アイコンを少し白っぽく（あるいは機体の色に馴染ませて）描画
+            ctx.globalCompositeOperation = 'source-atop'; 
+            ctx.globalAlpha = 0.8;
+            // アイコンが中心にくるように調整
+            const iconSize = this.radius * 1.2;
+            ctx.drawImage(specialIcon, -iconSize/2, -iconSize/2, iconSize, iconSize);
+            ctx.restore();
+        }
 
         ctx.restore();
 
