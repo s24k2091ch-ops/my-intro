@@ -1,0 +1,7 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/spin-battle", "destination": "/spin-battle/index.html" },
+    { "source": "/", "destination": "/index.html" }
+  ]
+}
