@@ -69,6 +69,7 @@ let cpuBey = null;
 let animationId = null;
 let isRoundEnding = false;
 let shakeAmount = 0; // 画面の揺れ量
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
 // --- Scene Management ---
 function switchScene(sceneName) {
@@ -970,13 +971,16 @@ function checkCollision() {
             // 衝撃に応じて画面を揺らす
             shakeAmount = Math.min(20, impact * 2);
             drawImpactSpark(playerBey.x + nx * playerBey.radius, playerBey.y + ny * playerBey.radius, impact * 0.5);
+            drawImpactSpark(playerBey.x + nx * playerBey.radius, playerBey.y + ny * playerBey.radius);
         }
     }
 }
 
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 let sparks = [];
 function drawImpactSpark(x, y, power = 1) {
-    for (let i = 0; i < 5 * power; i++) {
+    const count = (isMobile ? 3 : 5) * power;
+    for (let i = 0; i < count; i++) {
         sparks.push({
             x: x, 
             y: y, 
@@ -985,6 +989,9 @@ function drawImpactSpark(x, y, power = 1) {
             life: 15 + Math.random() * 10,
             size: 2 + Math.random() * 3
         });
+    }
+    if (sparks.length > 100) {
+        sparks.splice(0, sparks.length - 100);
     }
 }
 
@@ -1050,7 +1057,7 @@ function battleLoop() {
         let sx = (Math.random() - 0.5) * shakeAmount;
         let sy = (Math.random() - 0.5) * shakeAmount;
         ctx.translate(sx, sy);
-        shakeAmount *= 0.9; // 減衰
+        shakeAmount *= isMobile ? 0.8 : 0.9; // 減衰
         if (shakeAmount < 0.1) shakeAmount = 0;
     }
 
