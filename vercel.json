@@ -1,7 +1,10 @@
 {
+  "version": 2,
+  "public": true,
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/spin-battle", "destination": "/spin-battle/index.html" },
+    { "source": "/spin-battle/(.*)", "destination": "/spin-battle/$1" },
+    { "source": "/beyblade/(.*)", "destination": "/spin-battle/$1" },
     { "source": "/", "destination": "/index.html" }
   ]
 }

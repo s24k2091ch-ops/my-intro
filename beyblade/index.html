@@ -1,9 +1,126 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-    <meta http-equiv="refresh" content="0;URL='../spin-battle/index.html'">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spin Battle</title>
+    <link rel="stylesheet" href="spin-battle.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <p>Redirecting to <a href="../spin-battle/index.html">Spin Battle</a>...</p>
+    <div id="game-container">
+        <!-- Background Effects -->
+        <div class="background-grid"></div>
+        <div class="scanlines"></div>
+
+        <!-- 共通スコアボード (バトル中のみ表示) -->
+        <div id="scoreboard" class="hidden">
+            <div class="player-score">
+                <div class="info">
+                    <span class="name">YOU</span>
+                    <div class="burst-meter"><div id="player-burst-fill" class="fill"></div></div>
+                </div>
+                <span class="score" id="player-points">0</span>
+            </div>
+            <div class="target-score">FIRST TO 3</div>
+            <div class="cpu-score">
+                <span class="score" id="cpu-points">0</span>
+                <div class="info">
+                    <span class="name">CPU</span>
+                    <div class="burst-meter"><div id="cpu-burst-fill" class="fill"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- タイプ選択画面 -->
+        <div id="scene-selection" class="scene active">
+            <h1 class="glitch" data-text="Spin Battle">Spin Battle</h1>
+            
+            <div class="rules-container">
+                <h3>BATTLE RULES (First to 3 Points)</h3>
+                <ul>
+                    <li><span class="highlight">バーストフィニッシュ (2pt):</span> 何度も激しくぶつかると「バースト耐性」が減り、ゼロになるとバーストします。</li>
+                    <li><span class="highlight">オーバーフィニッシュ (1pt):</span> 弾き飛ばされてスタジアム（ネオンの壁）の外に出ると場外負けになります。</li>
+                    <li><span class="highlight">スピンフィニッシュ (1pt):</span> 摩擦により回転（スタミナ）が止まると負けになります。</li>
+                </ul>
+            </div>
+
+            <h2>SELECT YOUR BEY TYPE</h2>
+            <div class="type-grid">
+                <button class="type-btn attack" data-type="attack">
+                    <span class="type-name">ATTACK</span>
+                    <span class="type-desc">高速移動 / 高威力</span>
+                </button>
+                <button class="type-btn defense" data-type="defense">
+                    <span class="type-name">DEFENSE</span>
+                    <span class="type-desc">高重量 / バースト耐性</span>
+                </button>
+                <button class="type-btn stamina" data-type="stamina">
+                    <span class="type-name">STAMINA</span>
+                    <span class="type-desc">長寿命 / 中央維持</span>
+                </button>
+                <button class="type-btn balance" data-type="balance">
+                    <span class="type-name">BALANCE</span>
+                    <span class="type-desc">万能 / 平均的ステータス</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Explanation Phase -->
+        <div id="scene-explanation" class="scene hidden">
+            <h1 class="glitch" data-text="YOUR SKILLS">YOUR SKILLS</h1>
+            <div id="type-explanation-content" style="background: rgba(0,0,0,0.7); border: 1px solid #444; border-radius: 8px; padding: 20px; box-shadow: 0 0 15px rgba(0,255,204,0.3); margin-bottom: 30px; width: 80%; max-width: 600px; margin-left: auto; margin-right: auto;">
+                <!-- JS Inject -->
+            </div>
+            <button class="action-btn" id="btn-start-shoot" style="font-size: 1.5rem; padding: 15px 40px; box-shadow: 0 0 20px #00ffcc; margin-top: 20px;">GO TO SHOOT</button>
+        </div>
+
+        <!-- シュート画面 -->
+        <div id="scene-shoot" class="scene hidden">
+            <div id="countdown-text" class="glitch" data-text=""></div>
+            
+            <div id="shoot-ui" class="hidden" style="display: flex; flex-direction: column; align-items: center;">
+                <div class="gauge-container">
+                    <div id="power-bar" class="power-bar"></div>
+                    <div class="gauge-marker ideal">MAX</div>
+                </div>
+                <button id="btn-shoot" class="action-btn">SHOOT!</button>
+            </div>
+        </div>
+
+        <!-- バトル画面 (Canvas) -->
+        <div id="scene-battle" class="scene hidden">
+            <canvas id="stadium" width="600" height="600"></canvas>
+            <div class="battle-controls">
+                <button id="btn-special-move" class="action-btn special-move-btn hidden">SPECIAL MOVE!</button>
+                <button id="btn-defense" class="action-btn defense-btn hidden">DEFENSE!</button>
+                <button id="btn-move" class="action-btn move-btn hidden">MODE CHANGE</button>
+                <button id="btn-figure8" class="action-btn figure8-btn hidden">TARGET DASH!</button>
+            </div>
+
+            <div id="battle-message" class="hidden">
+                <h2 id="message-text">BURST FINISH!</h2>
+                <p id="message-subtext">+2 POINTS</p>
+                <button id="btn-next-round" class="action-btn small hidden">NEXT ROUND</button>
+            </div>
+        </div>
+
+        <!-- Special Move Cut-in Overlay -->
+        <div id="special-cutin" class="hidden">
+            <div class="cutin-bg"></div>
+            <div id="cutin-text" class="glitch" data-text="SPECIAL MOVE!">SPECIAL MOVE!</div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div id="scene-result" class="scene hidden">
+            <h1 id="result-title">YOU WIN!</h1>
+            <p id="result-detail">FINAL SCORE: 3 - 1</p>
+            <button id="btn-restart" class="action-btn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="spin-battle.js"></script>
 </body>
 </html>
