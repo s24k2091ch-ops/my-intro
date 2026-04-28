@@ -495,11 +495,57 @@ canvas {
     z-index: 25;
 }
 
-/* Special Move Button */
+/* Special Move Button (Sketch Inspired) */
 .special-move-btn {
-    background: linear-gradient(45deg, #ff0000, #ffcc00);
-    box-shadow: 0 0 20px #ff0000, 0 0 40px #ffcc00;
+    width: 320px;
+    height: 70px;
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px 0 25px !important;
+    background: linear-gradient(90deg, #ff0000, #ff8800) !important;
+    border: 3px solid #fff;
+    border-radius: 35px !important;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3) !important;
+    overflow: hidden;
     animation: pulse-special 1s infinite alternate;
+}
+
+.special-move-btn .btn-text {
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.btn-icon-circle {
+    width: 54px;
+    height: 54px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 3px solid #333;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.btn-icon-circle img {
+    width: 38px;
+    height: auto;
+}
+
+.special-move-btn:disabled {
+    background: #555 !important;
+    border-color: #888;
+    box-shadow: none !important;
+    animation: none;
+    opacity: 0.7;
+}
+
+.special-move-btn:disabled .btn-icon-circle {
+    background: #aaa;
+    filter: grayscale(1);
 }
 
 /* Defense Button */
