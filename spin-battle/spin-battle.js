@@ -60,6 +60,8 @@ const btnNextRound = document.getElementById('btn-next-round');
 const resultTitle = document.getElementById('result-title');
 const resultDetail = document.getElementById('result-detail');
 const btnRestart = document.getElementById('btn-restart');
+const specialCutin = document.getElementById('special-cutin');
+const cutinText = document.getElementById('cutin-text');
 
 // Entities
 let playerBey = null;
@@ -136,6 +138,17 @@ document.querySelectorAll('.type-btn').forEach(btn => {
         switchScene('explanation');
     });
 });
+
+function triggerSpecialCutin(text = "SPECIAL MOVE!") {
+    cutinText.textContent = text;
+    cutinText.setAttribute('data-text', text);
+    specialCutin.classList.remove('hidden');
+    
+    // 0.8秒後に消去
+    setTimeout(() => {
+        specialCutin.classList.add('hidden');
+    }, 1000);
+}
 
 btnStartShoot.addEventListener('click', () => {
     startShootPhase();
@@ -720,6 +733,7 @@ function triggerCpuSpecial() {
     if (!cpuBey || cpuBey.stamina <= 0) return;
     cpuBey.hasUsedSpecial = true;
     cpuBey.isSpecialActive = true;
+    triggerSpecialCutin("CPU SPECIAL!");
     
     let dx = playerBey.x - cpuBey.x;
     let dy = playerBey.y - cpuBey.y;
@@ -741,6 +755,7 @@ btnSpecialMove.addEventListener('click', () => {
     playerBey.isSpecialActive = true;
     btnSpecialMove.disabled = true;
     btnSpecialMove.textContent = "USED";
+    triggerSpecialCutin("SPECIAL MOVE!");
     
     // special move effect: point directly at CPU and accelerate massively
     let dx = cpuBey.x - playerBey.x;
