@@ -976,7 +976,6 @@ function checkCollision() {
     }
 }
 
-const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 let sparks = [];
 function drawImpactSpark(x, y, power = 1) {
     const count = (isMobile ? 3 : 5) * power;
