@@ -613,6 +613,7 @@ function triggerCpuQuickTurn() {
     if (cpuBey.originalType === 'balance') {
         cpuBey.balanceMode = cpuBey.balanceMode === 'stamina' ? 'attack' : 'stamina';
         drawImpactSpark(cpuBey.x, cpuBey.y);
+        triggerSpecialCutin(`CPU MODE: ${cpuBey.balanceMode.toUpperCase()}`);
         
         // アタックモードに切り替わった時だけ、クイックターンの突撃も発動する
         if (cpuBey.balanceMode === 'attack') {
@@ -641,6 +642,7 @@ function triggerCpuQuickTurn() {
             cpuBey.vx = (dx / dist) * dashSpeed;
             cpuBey.vy = (dy / dist) * dashSpeed;
             cpuBey.isDashing = true;
+            triggerSpecialCutin("CPU TARGET DASH!");
             setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
         }
         for(let i=0; i<5; i++) drawImpactSpark(cpuBey.x + (Math.random()-0.5)*30, cpuBey.y + (Math.random()-0.5)*30);
@@ -664,6 +666,7 @@ function triggerCpuQuickTurn() {
     cpuBey.vx = Math.cos(newAngle) * (speed * 1.5 + 4.0); // 強化 (1.2 -> 1.5, 2.0 -> 4.0)
     cpuBey.vy = Math.sin(newAngle) * (speed * 1.5 + 4.0);
     cpuBey.isDashing = true;
+    triggerSpecialCutin("CPU QUICK TURN!");
     setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
     
     drawImpactSpark(cpuBey.x, cpuBey.y);
@@ -684,6 +687,7 @@ function triggerCpuDefense() {
     if (!cpuBey || cpuBey.stamina <= 0 || cpuBey.hasUsedDefense) return;
     cpuBey.hasUsedDefense = true;
     cpuBey.isDefenseActive = true;
+    triggerSpecialCutin("CPU DEFENSE!");
     
     // 構えて踏ん張る（少し減速）
     cpuBey.vx *= 0.1;
@@ -720,6 +724,7 @@ function triggerCpuTargetDash() {
         cpuBey.vx = (dx / dist) * dashSpeed;
         cpuBey.vy = (dy / dist) * dashSpeed;
         cpuBey.isDashing = true;
+        triggerSpecialCutin("CPU TARGET DASH!");
         setTimeout(() => { if(cpuBey) cpuBey.isDashing = false; }, 800);
     }
     
@@ -778,6 +783,7 @@ btnDefense.addEventListener('click', () => {
     playerBey.isDefenseActive = true;
     btnDefense.disabled = true;
     btnDefense.textContent = "USED";
+    triggerSpecialCutin("DEFENSE!");
     
     // 構えて踏ん張る（少し減速）
     playerBey.vx *= 0.1;
@@ -800,6 +806,7 @@ btnMove.addEventListener('click', () => {
         playerBey.balanceMode = playerBey.balanceMode === 'stamina' ? 'attack' : 'stamina';
         btnMove.textContent = `MODE: ${playerBey.balanceMode.toUpperCase()}`;
         drawImpactSpark(playerBey.x, playerBey.y);
+        triggerSpecialCutin(`MODE: ${playerBey.balanceMode.toUpperCase()}`);
         
         // アタックモードに切り替わった時だけ、クイックターン（急降下）も同時に発動する
         if (playerBey.balanceMode === 'attack') {
@@ -833,6 +840,7 @@ btnMove.addEventListener('click', () => {
             playerBey.vx = (dx / dist) * dashSpeed;
             playerBey.vy = (dy / dist) * dashSpeed;
             playerBey.isDashing = true;
+            triggerSpecialCutin("TARGET DASH!");
             setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
         }
         for(let i=0; i<5; i++) drawImpactSpark(playerBey.x + (Math.random()-0.5)*30, playerBey.y + (Math.random()-0.5)*30);
@@ -858,6 +866,7 @@ btnMove.addEventListener('click', () => {
         playerBey.vx = Math.cos(newAngle) * (speed * 1.5 + 4.0);
         playerBey.vy = Math.sin(newAngle) * (speed * 1.5 + 4.0);
         playerBey.isDashing = true;
+        triggerSpecialCutin("QUICK TURN!");
         setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
         
         btnMove.textContent = "QUICK TURN!";
@@ -893,6 +902,7 @@ btnFigure8.addEventListener('click', () => {
         playerBey.vx = (dx / dist) * dashSpeed;
         playerBey.vy = (dy / dist) * dashSpeed;
         playerBey.isDashing = true;
+        triggerSpecialCutin("TARGET DASH!");
         setTimeout(() => { if(playerBey) playerBey.isDashing = false; }, 800);
     }
     
