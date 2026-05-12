@@ -61,12 +61,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- ロジック ---
 
-    function startApp() {
+    function startApp(isRestart = false) {
         currentStepIndex = 0;
         currentDestination = "";
         usedActivities.clear();
         currentVibe = null;
-        chatHistory.innerHTML = '';
+        
+        if (!isRestart) {
+            chatHistory.innerHTML = '';
+        } else {
+            const sep = document.createElement('div');
+            sep.style.textAlign = 'center';
+            sep.style.margin = '1rem 0';
+            sep.style.color = '#555';
+            sep.style.fontSize = '0.85rem';
+            sep.innerHTML = '--- 新しいスケジュールを作成します ---';
+            chatHistory.appendChild(sep);
+            scrollToBottom();
+        }
+        
         clearInputs();
 
         // 最初の挨拶
@@ -229,7 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
             restartBtn.innerHTML = "🔄 別のスケジュールを作る";
             restartBtn.onclick = () => {
                 addUserMessage("最初からやり直す！");
-                setTimeout(startApp, 1000);
+                setTimeout(() => startApp(true), 1000);
             };
             inputButtonArea.appendChild(restartBtn);
             inputButtonArea.classList.remove('hidden');
@@ -257,5 +270,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // アプリ開始
-    startApp();
+    startApp(false);
 });
