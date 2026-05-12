@@ -1,256 +1,261 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 1. 気分とアクティビティのデータ定義
     const vibeOptions = [
-        {
-            id: '1', icon: '🏕️', name: "アウトドア vibe", desc: "外に出たい！身体を動かしたい！",
-            activities: ["散歩", "カフェ巡り", "買い物", "サウナ", "公園散策", "ボウリング", "スポーツ", "ドライブ", "テーマパーク"]
-        },
-        {
-            id: '2', icon: '☕', name: "インドア chill vibe", desc: "家でまったりしたい...",
-            activities: ["映画鑑賞", "アニメ一気見", "こだわりの料理", "断捨離・掃除", "ゲーム", "全力でだらだらする", "お昼寝", "漫画を読む"]
-        },
-        {
-            id: '3', icon: '🎨', name: "クリエイティブ vibe", desc: "何か作りたい・集中したい！",
-            activities: ["絵を描く", "動画編集", "プログラミング", "作文・ブログ", "日記を書く", "音楽制作", "本を読む", "DIY"]
-        },
-        {
-            id: '4', icon: '🗣️', name: "友だち vibe", desc: "誰かと関わりたい・話したい！",
-            activities: ["友達に電話", "ご飯に誘う", "ゲーセン", "ボードゲーム", "カラオケ", "オンラインマルチ対戦", "飲みに行く"]
-        },
-        {
-            id: '5', icon: '🛁', name: "リフレッシュ vibe", desc: "とにかく疲れてる・癒やされたい...",
-            activities: ["ゆっくりお風呂", "近所を散歩", "静かなカフェ", "贅沢な昼寝", "マッサージ", "公園でぼーっとする", "ヨガ・ストレッチ"]
-        }
+        { id: '1', icon: '🏕️', name: "アウトドア vibe", desc: "外に出たい！身体を動かしたい！", activities: ["散歩", "カフェ巡り", "買い物", "サウナ", "公園散策", "ボウリング", "スポーツ", "ドライブ", "テーマパーク"] },
+        { id: '2', icon: '☕', name: "インドア chill vibe", desc: "家でまったりしたい...", activities: ["映画鑑賞", "アニメ一気見", "こだわりの料理", "断捨離・掃除", "ゲーム", "全力でだらだらする", "お昼寝", "漫画を読む"] },
+        { id: '3', icon: '🎨', name: "クリエイティブ vibe", desc: "何か作りたい・集中したい！", activities: ["絵を描く", "動画編集", "プログラミング", "作文・ブログ", "日記を書く", "音楽制作", "本を読む", "DIY"] },
+        { id: '4', icon: '🗣️', name: "友だち vibe", desc: "誰かと関わりたい・話したい！", activities: ["友達に電話", "ご飯に誘う", "ゲーセン", "ボードゲーム", "カラオケ", "オンラインマルチ対戦", "飲みに行く"] },
+        { id: '5', icon: '🛁', name: "リフレッシュ vibe", desc: "とにかく疲れてる・癒やされたい...", activities: ["ゆっくりお風呂", "近所を散歩", "静かなカフェ", "贅沢な昼寝", "マッサージ", "公園でぼーっとする", "ヨガ・ストレッチ"] }
     ];
 
-    const views = {
-        destination: document.getElementById('view-destination'),
-        vibe: document.getElementById('view-vibe'),
-        suggestions: document.getElementById('view-suggestions'),
-        result: document.getElementById('view-result')
-    };
-
-    const vibeButtonsContainer = document.getElementById('vibe-buttons');
-    const suggestionList = document.getElementById('suggestion-list');
-    const suggestionTitle = document.getElementById('suggestion-title');
-    const vibeTitle = document.getElementById('vibe-title');
-    const progressFill = document.getElementById('progress-fill');
-    
-    // 目的地入力と表示に関するDOM
+    const chatHistory = document.getElementById('chat-history');
+    const inputTextArea = document.getElementById('input-text-area');
+    const inputButtonArea = document.getElementById('input-button-area');
     const destInput = document.getElementById('dest-input');
-    const btnStart = document.getElementById('btn-start');
-    const finalDestContainer = document.getElementById('final-dest-container');
-    const finalDestText = document.getElementById('final-dest');
+    const btnSendDest = document.getElementById('btn-send-dest');
 
-    // スケジュール状態管理
+    // 状態管理
     const stepOrder = ['morning', 'noon', 'night'];
     let currentStepIndex = 0;
-    
-    const schedule = {
-        morning: null,
-        noon: null,
-        night: null
-    };
-    
-    // 入力された目的地
+    const schedule = { morning: null, noon: null, night: null };
     let currentDestination = "";
-    
-    // 使ったアクティビティを記録（重複防止用）
     let usedActivities = new Set();
     let currentVibe = null;
 
-    // --- 初期化処理 ---
-    
-    // 気分ボタンを生成
-    vibeOptions.forEach(vibe => {
-        const btn = document.createElement('button');
-        btn.className = 'vibe-btn';
-        btn.innerHTML = `
-            <span class="vibe-icon">${vibe.icon}</span>
-            <div class="vibe-info">
-                <strong class="vibe-name">${vibe.name}</strong>
-                <span class="vibe-desc">${vibe.desc}</span>
-            </div>
-        `;
-        
-        btn.addEventListener('click', () => {
-            currentVibe = vibe;
-            showSuggestions();
-        });
-        
-        vibeButtonsContainer.appendChild(btn);
-    });
+    // --- チャットUI用ヘルパー関数 ---
 
-    // 画面のタイトルとプログレスバーを更新
-    function updateVibeScreenData() {
-        const step = stepOrder[currentStepIndex];
-        
-        if (step === 'morning') {
-            vibeTitle.innerHTML = "✨ まずは「朝」何をする？✨";
-            progressFill.style.width = "10%";
-        } else if (step === 'noon') {
-            vibeTitle.innerHTML = "✨ 次は「昼」何をする？✨";
-            progressFill.style.width = "45%";
-        } else if (step === 'night') {
-            vibeTitle.innerHTML = "✨ 最後に「夜」何をする？✨";
-            progressFill.style.width = "80%";
-        }
+    // 一番下までスクロール
+    function scrollToBottom() {
+        setTimeout(() => { 
+            chatHistory.scrollTop = chatHistory.scrollHeight; 
+        }, 50);
+    }
+
+    // BOTのメッセージを追加
+    function addBotMessage(htmlContent) {
+        const row = document.createElement('div');
+        row.className = 'message-row bot';
+        row.innerHTML = `
+            <div class="avatar">🤖</div>
+            <div class="bubble">${htmlContent}</div>
+        `;
+        chatHistory.appendChild(row);
+        scrollToBottom();
+    }
+
+    // ユーザーのメッセージを追加
+    function addUserMessage(text) {
+        const row = document.createElement('div');
+        row.className = 'message-row user';
+        row.innerHTML = `<div class="bubble">${text}</div>`;
+        chatHistory.appendChild(row);
+        scrollToBottom();
+    }
+
+    // 入力エリアを隠す
+    function clearInputs() {
+        inputButtonArea.innerHTML = '';
+        inputButtonArea.classList.add('hidden');
+        inputTextArea.classList.add('hidden');
     }
 
     // --- ロジック ---
 
-    // 画面切り替えフェードアニメーション
-    function switchView(viewName) {
-        Object.values(views).forEach(v => {
-            if (v.classList.contains('active')) {
-                v.classList.remove('active');
-                setTimeout(() => {
-                    v.style.display = 'none';
-                }, 400); 
-            }
-        });
+    function startApp() {
+        currentStepIndex = 0;
+        currentDestination = "";
+        usedActivities.clear();
+        currentVibe = null;
+        chatHistory.innerHTML = '';
+        clearInputs();
 
+        // 最初の挨拶
+        addBotMessage("🗺️ 今日はどこへ行く？<br><span style='font-size:0.8rem;color:#666;'>（決まってなければ空欄で送信してね！）</span>");
+        
+        // 少し遅れて入力欄を表示
         setTimeout(() => {
-            views[viewName].style.display = 'flex';
-            void views[viewName].offsetWidth;
-            views[viewName].classList.add('active');
-        }, 400);
+            inputTextArea.classList.remove('hidden');
+            destInput.value = '';
+            destInput.focus();
+        }, 600);
+    }
+
+    function askVibe() {
+        const step = stepOrder[currentStepIndex];
+        let timeText = step === 'morning' ? "朝" : step === 'noon' ? "昼" : "夜";
+        
+        setTimeout(() => {
+            addBotMessage(`✨ 「${timeText}」は何をする？<br>今の気分を教えてね！`);
+            showVibeButtons();
+        }, 800); // リアルな間を演出
+    }
+
+    function showVibeButtons() {
+        clearInputs();
+        vibeOptions.forEach(vibe => {
+            const btn = document.createElement('button');
+            btn.className = 'chat-btn';
+            btn.innerHTML = `<span style="font-size:1.5rem;margin-right:10px;">${vibe.icon}</span> <div><strong>${vibe.name}</strong><br><span style="font-size:0.75rem;color:#666;">${vibe.desc}</span></div>`;
+            
+            // 選んだ時の処理
+            btn.onclick = () => {
+                addUserMessage(`${vibe.icon} ${vibe.name}`);
+                currentVibe = vibe;
+                showSuggestions();
+            };
+            inputButtonArea.appendChild(btn);
+        });
+        inputButtonArea.classList.remove('hidden');
     }
 
     // 未使用のアクティビティをランダム取得
     function getRandomActivities(activities, count) {
-        // すでに選んだものを除外する
         const available = activities.filter(a => !usedActivities.has(a));
-        
-        // もし候補が足りなくなってしまったら、重複を許容する
         const pool = available.length >= count ? available : activities;
-        
         const shuffled = [...pool].sort(() => 0.5 - Math.random());
         return shuffled.slice(0, count);
     }
 
-    // 提案画面
     function showSuggestions() {
-        if (!currentVibe) return;
-
-        const timeLabel = 
-            stepOrder[currentStepIndex] === 'morning' ? "🌅 朝" :
-            stepOrder[currentStepIndex] === 'noon' ? "☀️ 昼" : "🌙 夜";
-
-        suggestionTitle.innerHTML = `「${currentVibe.name}」<br><span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: normal;">${timeLabel}の提案</span>`;
-        suggestionList.innerHTML = '';
-
-        // 最大3つの提案を取得
-        const numToSuggest = Math.min(3, currentVibe.activities.length);
-        const suggestions = getRandomActivities(currentVibe.activities, numToSuggest);
-
-        suggestions.forEach((activity) => {
-            const btn = document.createElement('button');
-            btn.className = 'suggestion-btn';
-            btn.innerHTML = activity;
+        clearInputs();
+        setTimeout(() => {
+            addBotMessage(`「${currentVibe.name}」だね！<br>この中から選んでみて💡`);
             
-            // 選んだときの処理
-            btn.addEventListener('click', () => {
-                commitActivity(activity);
+            const numToSuggest = Math.min(3, currentVibe.activities.length);
+            const suggestions = getRandomActivities(currentVibe.activities, numToSuggest);
+
+            suggestions.forEach(act => {
+                const btn = document.createElement('button');
+                btn.className = 'chat-btn';
+                btn.innerHTML = `✅ ${act}`;
+                btn.onclick = () => {
+                    addUserMessage(act);
+                    commitActivity(act);
+                };
+                inputButtonArea.appendChild(btn);
             });
-            
-            suggestionList.appendChild(btn);
-        });
 
-        switchView('suggestions');
+            // その他アクション
+            const rerollBtn = document.createElement('button');
+            rerollBtn.className = 'chat-btn action';
+            rerollBtn.innerHTML = "🔄 他の候補を見る";
+            rerollBtn.onclick = () => {
+                addUserMessage("他の候補を見る");
+                showSuggestions();
+            };
+            inputButtonArea.appendChild(rerollBtn);
+
+            const backBtn = document.createElement('button');
+            backBtn.className = 'chat-btn action';
+            backBtn.innerHTML = "⬅️ 気分を選び直す";
+            backBtn.onclick = () => {
+                addUserMessage("やっぱり気分を選び直す！");
+                askVibe();
+            };
+            inputButtonArea.appendChild(backBtn);
+
+            inputButtonArea.classList.remove('hidden');
+        }, 800);
     }
 
-    // スケジュール決定時の処理
     function commitActivity(activity) {
         const step = stepOrder[currentStepIndex];
         schedule[step] = activity;
-        usedActivities.add(activity); // 重複防止のために記憶
-
-        currentStepIndex++;
+        usedActivities.add(activity); // 重複防止
         
+        currentStepIndex++;
+        clearInputs();
+
         if (currentStepIndex >= stepOrder.length) {
-            // 全て埋まったら結果画面へ
-            showResult();
+            // 全て埋まったら結果へ
+            setTimeout(showResult, 800);
         } else {
-            // 次のステップへ (毎回気分を聞くため Vibe画面 に戻る)
-            currentVibe = null;
-            updateVibeScreenData();
-            switchView('vibe');
+            // 次のステップへ
+            askVibe();
         }
     }
 
-    // 結果画面
+    // スケジュール結果表示（吹き出しの中にカードを描画）
     function showResult() {
-        progressFill.style.width = "100%";
-        
-        // 目的地の表示
-        if (currentDestination) {
-            finalDestText.textContent = `行き先: ${currentDestination}`;
-            finalDestContainer.style.display = 'flex';
-        } else {
-            finalDestContainer.style.display = 'none';
-        }
-        
-        // 取得した予定をHTMLにセット
-        document.getElementById('final-morning').textContent = schedule.morning;
-        document.getElementById('final-noon').textContent = schedule.noon;
-        document.getElementById('final-night').textContent = schedule.night;
+        addBotMessage("🎉 スケジュール完成！<br>最高の1日になりますように✨");
 
-        // 【NEW】Google Maps 検索リンクの自動生成
         const baseMapUrl = "https://www.google.com/maps/search/?api=1&query=";
         const queryPrefix = currentDestination ? currentDestination + " " : "";
 
-        // おすすめというキーワードを加えて検索
-        document.getElementById('link-morning').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.morning + " おすすめ");
-        document.getElementById('link-noon').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.noon + " おすすめ");
-        document.getElementById('link-night').href = baseMapUrl + encodeURIComponent(queryPrefix + schedule.night + " おすすめ");
-        
-        switchView('result');
-    }
+        let destHtml = "";
+        if (currentDestination) {
+            destHtml = `<div style="font-weight:bold; color:#0ea5e9; margin-bottom: 15px; font-size:1.1rem;">🗺️ 行き先: ${currentDestination}</div>`;
+        }
 
-    // 最初からやり直す処理
-    function resetApp() {
-        currentStepIndex = 0;
-        schedule.morning = null;
-        schedule.noon = null;
-        schedule.night = null;
-        usedActivities.clear();
-        currentVibe = null;
+        const scheduleHtml = `
+            <div class="schedule-card">
+                ${destHtml}
+                <ul class="timeline">
+                    <li class="timeline-item">
+                        <div class="timeline-icon">🌅</div>
+                        <div class="timeline-content">
+                            <span class="time-label">朝 (Morning)</span>
+                            <span class="activity-text">${schedule.morning}</span>
+                            <a href="${baseMapUrl + encodeURIComponent(queryPrefix + schedule.morning + " おすすめ")}" target="_blank" class="map-link-btn">📍 マップで提案を見る</a>
+                        </div>
+                    </li>
+                    <li class="timeline-item">
+                        <div class="timeline-icon">☀️</div>
+                        <div class="timeline-content">
+                            <span class="time-label">昼 (Noon)</span>
+                            <span class="activity-text">${schedule.noon}</span>
+                            <a href="${baseMapUrl + encodeURIComponent(queryPrefix + schedule.noon + " おすすめ")}" target="_blank" class="map-link-btn">📍 マップで提案を見る</a>
+                        </div>
+                    </li>
+                    <li class="timeline-item">
+                        <div class="timeline-icon">🌙</div>
+                        <div class="timeline-content">
+                            <span class="time-label">夜 (Night)</span>
+                            <span class="activity-text">${schedule.night}</span>
+                            <a href="${baseMapUrl + encodeURIComponent(queryPrefix + schedule.night + " おすすめ")}" target="_blank" class="map-link-btn">📍 マップで提案を見る</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        `;
         
-        // 入力フォームをリセット
-        destInput.value = "";
-        currentDestination = "";
-        
-        updateVibeScreenData();
-        switchView('destination');
+        setTimeout(() => {
+            addBotMessage(scheduleHtml);
+            
+            // もう一度ボタンを表示
+            clearInputs();
+            const restartBtn = document.createElement('button');
+            restartBtn.className = 'chat-btn action';
+            restartBtn.innerHTML = "🔄 別のスケジュールを作る";
+            restartBtn.onclick = () => {
+                addUserMessage("最初からやり直す！");
+                setTimeout(startApp, 1000);
+            };
+            inputButtonArea.appendChild(restartBtn);
+            inputButtonArea.classList.remove('hidden');
+        }, 1200); // 結果は少しタメてから出す
     }
 
     // --- イベントリスナー ---
-    
-    // 目的地を入力してスタート
-    btnStart.addEventListener('click', () => {
-        const inputStr = destInput.value.trim();
-        if (inputStr) {
-            currentDestination = inputStr;
+
+    // 目的地の送信
+    btnSendDest.onclick = () => {
+        const val = destInput.value.trim();
+        if (val) {
+            currentDestination = val;
+            addUserMessage(val);
         } else {
             currentDestination = "";
+            addUserMessage("（目的地：未定）");
         }
-        updateVibeScreenData();
-        switchView('vibe');
-    });
+        clearInputs();
+        askVibe();
+    };
 
     destInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            btnStart.click();
-        }
+        if (e.key === 'Enter') btnSendDest.click();
     });
-    
-    document.getElementById('btn-reroll').addEventListener('click', showSuggestions);
-    
-    document.getElementById('btn-back').addEventListener('click', () => {
-        currentVibe = null;
-        switchView('vibe');
-    });
-    
-    document.getElementById('btn-restart').addEventListener('click', resetApp);
+
+    // アプリ開始
+    startApp();
 });
