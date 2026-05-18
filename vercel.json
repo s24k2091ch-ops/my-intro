@@ -5,6 +5,8 @@
   "rewrites": [
     { "source": "/spin-battle/(.*)", "destination": "/spin-battle/$1" },
     { "source": "/beyblade/(.*)", "destination": "/spin-battle/$1" },
+    { "source": "/vibe", "destination": "/領域C/app.html" },
+    { "source": "/vibe/(.*)", "destination": "/領域C/$1" },
     { "source": "/", "destination": "/index.html" }
   ]
 }
